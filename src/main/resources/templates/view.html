@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="${post.title}">Blog Post</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+        .container { max-width: 800px; margin: auto; }
+        h1 { font-size: 2em; margin-bottom: 0; }
+        .meta { color: #777; margin-bottom: 20px; }
+        .comment { border-top: 1px solid #ddd; padding-top: 10px; margin-top: 10px; }
+        .comment-form { margin-top: 20px; }
+        .nav { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    </style>
+</head>`
+<body>
+<div class="container">
+    <div class="nav">
+        <a href="/">Home</a>
+        <div>
+            <a th:href="@{'/edit/' + ${post.id}}">Edit</a>
+            <form th:action="@{'/delete/' + ${post.id}}" method="post" style="display:inline;">
+                <button type="submit" class="danger-btn" onclick="return confirm('Are you sure you want to delete this post?');">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <h1 th:text="${post.title}">Blog post title</h1>
+    <div class="meta" th:text="${post.author + ', ' + #temporals.format(post.createdAt, 'dd/MM/yyyy')}"></div>
+
+    <p th:utext="${post.content}">Post content...</p>
+
+    <h3>Comments</h3>
+    <div th:each="comment : ${comments}" class="comment">
+        <strong th:text="${comment.name}">Name</strong> (<span th:text="${comment.email}">email</span>)
+        <p th:text="${comment.comment}"></p>
+        <form th:action="@{'/comments/' + ${comment.id} + '/edit'}" method="post">
+            <textarea name="comment" th:text="${comment.comment}" rows="2" cols="60"></textarea><br>
+            <input type="hidden" name="name" th:value="${comment.name}"/>
+            <input type="hidden" name="email" th:value="${comment.email}"/>
+            <button type="submit">Update</button>
+        </form>
+        <form th:action="@{'/comments/' + ${comment.id} + '/delete'}" method="post">
+            <button type="submit">Delete</button>
+        </form>
+    </div>
+
+    <h4>Add a comment</h4>
+    <form th:action="@{'/comments/add/' + ${post.id}}" method="post" class="comment-form">
+        <input type="hidden" name="postId" th:value="${post.id}"/>
+        <input type="text" name="name" placeholder="Your name" required/><br>
+        <input type="email" name="email" placeholder="Your email" required/><br>
+        <textarea name="comment" placeholder="Write your comment" rows="3" cols="60" required></textarea><br>
+        <button type="submit">Add Comment</button>
+    </form>
+</div>
+</body>
+</html>

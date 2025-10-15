@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>My Blog Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: white;
+            color: black;
+        }
+
+        form.filter-bar {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: whitesmoke;
+            border-radius: 8px;
+        }
+
+        .post-card {
+            border: 1px solid lightgray;
+            padding: 16px;
+            margin: 10px 0;
+            border-radius: 6px;
+            background-color: white;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .post-title a {
+            font-size: 1.4em;
+            text-decoration: none;
+            color: black;
+        }
+
+        .post-title a:hover {
+            text-decoration: underline;
+            color: dimgray;
+        }
+
+        .meta {
+            color: darkgray;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .excerpt {
+            color: black;
+        }
+
+        input, select, button, a {
+            color: black;
+            background-color: white;
+            border: 1px solid lightgray;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:hover, a:hover {
+            background-color: gainsboro;
+        }
+
+        a {
+            text-decoration: none;
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const tagSelect = document.getElementById("tagSelect");
+            try {
+                const res = await fetch("/tags");
+                const tags = await res.json();
+                tags.sort((a, b) => a.name.localeCompare(b.name));
+                tags.forEach(tag => {
+                    const opt = document.createElement("option");
+                    opt.value = tag.id;
+                    opt.textContent = tag.name;
+                    // reselect existing filters
+                    if (new URLSearchParams(window.location.search).getAll("tagId").includes(String(tag.id))) {
+                        opt.selected = true;
+                    }
+                    tagSelect.appendChild(opt);
+                });
+            } catch (e) { console.error("Failed to load tags", e); }
+        });
+    </script>
+</head>
+<body>
+<h1>My Blog Application</h1>
+
+<form class="filter-bar" th:action="@{/}" method="get">
+    <input type="text" name="q" placeholder="Search..." th:value="${q}" style="width:200px;"/>
+
+    <input type="text" name="author" placeholder="Author" th:value="${authorFilter}" style="width:150px;"/>
+
+    <select id="tagSelect" name="tagId" multiple size="3" style="width:150px;">
+        <!-- tags dynamically loaded from /tags -->
+    </select>
+
+    <select name="isPublished" style="width:130px;">
+        <option th:value="${null}" th:selected="${isPublished == null}">All</option>
+        <option th:value="true" th:selected="${isPublished == true}">Published</option>
+        <option th:value="false" th:selected="${isPublished == false}">Draft</option>
+    </select>
+
+    <select name="sortField" style="width:130px;">
+        <option value="updatedAt" th:selected="${#strings.equals(sortField, 'updatedAt')}">Sort by Updated</option>
+        <option value="createdAt" th:selected="${#strings.equals(sortField, 'createdAt')}">Sort by Created</option>
+        <option value="title" th:selected="${#strings.equals(sortField, 'title')}">Sort by Title</option>
+    </select>
+
+    <select name="sortDir" style="width:90px;">
+        <option value="desc" th:selected="${#strings.equals(sortDir, 'desc')}">DESC</option>
+        <option value="asc" th:selected="${#strings.equals(sortDir, 'asc')}">ASC</option>
+    </select>
+
+    <button type="submit">Apply</button>
+    <a href="/" style="margin-left:10px;">Clear</a>
+</form>
+
+<div th:each="post : ${posts}" class="post-card">
+    <div class="post-title">
+        <a th:href="@{'/' + ${post.id}}" th:text="${post.title}">Title</a>
+    </div>
+    <div class="meta">
+        <span th:text="${post.author}">Author</span>,
+        <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">Date</span>
+    </div>
+    <div class="excerpt" th:text="${post.excerpt}">Excerpt text...</div>
+</div>
+
+<div class="pagination">
+    <a th:if="${hasPrev}" th:href="@{/(page=${currentPage - 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">&lt; Previous</a>
+    <a th:if="${hasNext}" th:href="@{/(page=${currentPage + 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">Next &gt;</a>
+</div>
+
+</body>
+</html>
