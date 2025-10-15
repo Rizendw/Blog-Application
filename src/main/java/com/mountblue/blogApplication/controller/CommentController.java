@@ -1,10 +1,13 @@
 package com.mountblue.blogApplication.controller;
 
+import com.mountblue.blogApplication.dto.CommentRequest;
 import com.mountblue.blogApplication.entity.Comment;
 import com.mountblue.blogApplication.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -15,15 +18,30 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping("/add/{postId}")
-    public String addComment(@PathVariable Long postId, @ModelAttribute @Valid Comment comment) {
+    public String addComment(@PathVariable Long postId,
+                             @ModelAttribute @Valid CommentRequest commentRequest,
+                             BindingResult bindingResult,
+                             Model model) {
         System.err.println("caled!!controler  called!!");
-        commentService.addComment(postId, comment);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("error", "Invalid data");
+            return "redirect:/" + postId;
+        }
+
+        commentService.addComment(postId, commentRequest);
         return "redirect:/" + postId;
     }
 
     @PostMapping("/{id}/edit")
-    public String updateComment(@PathVariable Long id, @ModelAttribute @Valid Comment comment) {
+    public String updateComment(@PathVariable Long id,
+                                @ModelAttribute @Valid CommentRequest comment,
+                                BindingResult bindingResult,
+                                Model model) {
         Comment existing = commentService.getById(id);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("error", "Invalid input");
+            return "redirect:/" + existing.getPost().getId();
+        }
         commentService.updateComment(existing.getId(), comment);
         return "redirect:/" + existing.getPost().getId();
     }

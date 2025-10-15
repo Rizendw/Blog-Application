@@ -47,7 +47,6 @@
 
     <h4>Add a comment</h4>
     <form th:action="@{'/comments/add/' + ${post.id}}" method="post" class="comment-form">
-        <input type="hidden" name="postId" th:value="${post.id}"/>
         <input type="text" name="name" placeholder="Your name" required/><br>
         <input type="email" name="email" placeholder="Your email" required/><br>
         <textarea name="comment" placeholder="Write your comment" rows="3" cols="60" required></textarea><br>

@@ -127,7 +127,7 @@ public class PostServiceImpl  implements PostService {
                 PostSpecification.createdBetween(from, to)
         );
 
-        String sortProperty =( sortField != null || sortField.isEmpty()) ? "updatedAt" : sortField;
+        String sortProperty = (sortField == null || sortField.isEmpty()) ? "updatedAt" : sortField;
         Sort.Direction direction = ("asc".equalsIgnoreCase(sortDir)) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(1, size), Sort.by(direction, sortProperty));
 

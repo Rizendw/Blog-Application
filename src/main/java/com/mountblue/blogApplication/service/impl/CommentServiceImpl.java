@@ -1,5 +1,6 @@
 package com.mountblue.blogApplication.service.impl;
 
+import com.mountblue.blogApplication.dto.CommentRequest;
 import com.mountblue.blogApplication.entity.Comment;
 import com.mountblue.blogApplication.entity.Post;
 import com.mountblue.blogApplication.repository.CommentRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
@@ -25,23 +27,28 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public Comment addComment(Long postId, Comment comment) {
-        System.err.println("caled!!service called!!");
+    public void addComment(Long postId, com.mountblue.blogApplication.dto.CommentRequest request) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found"));
+                .orElseThrow(() -> new NoSuchElementException("Post not found"));
+        System.err.println("aa ya aa gy!!!!!a");
+        Comment comment = new Comment();
+        comment.setName(request.name());
+        comment.setEmail(request.email());
+        comment.setComment(request.comment());
         comment.setPost(post);
-        return commentRepository.save(comment);
+        commentRepository.save(comment);
     }
+
 
     @Override
     @Transactional
-    public Comment updateComment(Long id, Comment updated) {
+    public void updateComment(Long id, CommentRequest updated) {
         Comment existing = commentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
-        existing.setName(updated.getName());
-        existing.setEmail(updated.getEmail());
-        existing.setComment(updated.getComment());
-        return commentRepository.save(existing);
+        existing.setName(updated.name());
+        existing.setEmail(updated.email());
+        existing.setComment(updated.comment());
+        //return commentRepository.save(existing);
     }
 
     @Override
@@ -54,7 +61,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional
     public Long deleteComment(Long id) {
         Comment existing = commentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> new NoSuchElementException("Comment not found"));
         Long postId = existing.getPost().getId();
         commentRepository.delete(existing);
         return postId;

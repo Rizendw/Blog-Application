@@ -58,12 +58,8 @@ public class PostController {
 
         Instant from = null;
         Instant to = null;
-        try {
-            if (dateFrom != null && !dateFrom.isBlank()) from = Instant.parse(dateFrom);
-            if (dateTo != null && !dateTo.isBlank()) to = Instant.parse(dateTo);
-        } catch (DateTimeParseException e) {
-            return "redirect:/";
-        }
+        from = safeParse(dateFrom);
+        to = safeParse(dateTo);
 
         Page<PostResponse> pageResult = postService.searchPosts(search, tagId, author, published, from, to, page, size, sortField, sortDir);
 
@@ -84,7 +80,7 @@ public class PostController {
         model.addAttribute("authorFilter", author);
         model.addAttribute("isPublished", published);
 
-        return "/list";
+        return "list";
     }
 
     @GetMapping("/create")
@@ -131,6 +127,16 @@ public class PostController {
         postService.deletePost(id);
         return "redirect:/";
     }
+
+    private Instant safeParse(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return Instant.parse(value);
+        } catch (DateTimeParseException e) {
+            return null; // just ignore bad date
+        }
+    }
+
 
 //    @GetMapping
 //    public String listAllPosts(
