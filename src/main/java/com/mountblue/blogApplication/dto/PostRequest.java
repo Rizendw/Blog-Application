@@ -3,12 +3,14 @@ package com.mountblue.blogApplication.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.util.List;
+import java.util.Set;
 
-public record CreatePostRequest(
+public record PostRequest(
+        Long id,
+        Long authorId,
         @NotBlank @Size(max = 255) String title,
         @NotBlank String content,
-        String author,
-        List<@NotBlank String> tagList
+        boolean isPublished,
+        Set<String> tagList
 ) {
 }

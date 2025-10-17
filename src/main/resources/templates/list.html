@@ -6,141 +6,198 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 40px;
-            background-color: white;
+            color: #000;
+            background-color: #fff;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        form {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        input, select, button {
+            border: 1px solid #000;
+            padding: 3px 5px;
+            font-size: 13px;
+        }
+
+        a {
             color: black;
+            text-decoration: none;
         }
 
-        form.filter-bar {
-            margin-bottom: 20px;
-            padding: 10px;
-            background: whitesmoke;
-            border-radius: 8px;
+        a:hover {
+            text-decoration: underline;
         }
 
-        .post-card {
-            border: 1px solid lightgray;
-            padding: 16px;
-            margin: 10px 0;
-            border-radius: 6px;
-            background-color: white;
+        /* === Two-column layout with equal boxes === */
+        .post-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
+        .post {
+            flex: 1 1 calc(50% - 10px);
+            border: 1px solid #000;
+            padding: 8px;
+            box-sizing: border-box;
+            height: 150px; /* fixed height for equal box size */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .post-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .post-meta {
+            font-size: 12px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .post-excerpt {
+            flex-grow: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* limit to 3 lines */
+            -webkit-box-orient: vertical;
         }
 
         .pagination {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .post-title a {
-            font-size: 1.4em;
-            text-decoration: none;
-            color: black;
-        }
-
-        .post-title a:hover {
-            text-decoration: underline;
-            color: dimgray;
-        }
-
-        .meta {
-            color: darkgray;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-        }
-
-        .excerpt {
-            color: black;
-        }
-
-        input, select, button, a {
-            color: black;
-            background-color: white;
-            border: 1px solid lightgray;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        button:hover, a:hover {
-            background-color: gainsboro;
-        }
-
-        a {
-            text-decoration: none;
+            margin-top: 10px;
+            font-size: 14px;
         }
     </style>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            const tagSelect = document.getElementById("tagSelect");
-            try {
-                const res = await fetch("/tags");
-                const tags = await res.json();
-                tags.sort((a, b) => a.name.localeCompare(b.name));
-                tags.forEach(tag => {
-                    const opt = document.createElement("option");
-                    opt.value = tag.id;
-                    opt.textContent = tag.name;
-                    // reselect existing filters
-                    if (new URLSearchParams(window.location.search).getAll("tagId").includes(String(tag.id))) {
-                        opt.selected = true;
-                    }
-                    tagSelect.appendChild(opt);
-                });
-            } catch (e) { console.error("Failed to load tags", e); }
-        });
-    </script>
 </head>
 <body>
+
 <h1>My Blog Application</h1>
 
-<form class="filter-bar" th:action="@{/}" method="get">
-    <input type="text" name="q" placeholder="Search..." th:value="${q}" style="width:200px;"/>
+<div class="top-bar">
+    <div><a href="/create">+ Create New Post</a></div>
+    <div>
+        <a href="/login" style="margin-right:10px;">Login</a>
+        <a href="/signup">Sign Up</a>
+    </div>
+</div>
 
-    <input type="text" name="author" placeholder="Author" th:value="${authorFilter}" style="width:150px;"/>
+<form method="get" th:action="@{/}">
 
-    <select id="tagSelect" name="tagId" multiple size="3" style="width:150px;">
-        <!-- tags dynamically loaded from /tags -->
+    <!-- Search text -->
+    <input type="text" name="search" placeholder="Search..." th:value="${search}" />
+
+    <!-- Author filter -->
+    <input type="text" name="author" placeholder="Author" th:value="${authorFilter}" />
+
+    <!-- Tag filter (multi-select) -->
+    <label for="tagSelect">Filter by Tags:</label>
+    <select id="tagSelect" name="tagId" multiple size="5">
+        <option th:each="tag : ${allTags}"
+                th:value="${tag.id}"
+                th:text="${tag.name}"
+                th:selected="${#lists.contains(selectedTagIds, tag.id)}">
+        </option>
     </select>
 
-    <select name="isPublished" style="width:130px;">
-        <option th:value="${null}" th:selected="${isPublished == null}">All</option>
-        <option th:value="true" th:selected="${isPublished == true}">Published</option>
-        <option th:value="false" th:selected="${isPublished == false}">Draft</option>
+    <!-- Published filter -->
+    <select name="published">
+        <option value="" th:selected="${isPublished == null}">All</option>
+        <option value="true" th:selected="${isPublished == true}">Published</option>
+        <option value="false" th:selected="${isPublished == false}">Draft</option>
     </select>
 
-    <select name="sortField" style="width:130px;">
-        <option value="updatedAt" th:selected="${#strings.equals(sortField, 'updatedAt')}">Sort by Updated</option>
-        <option value="createdAt" th:selected="${#strings.equals(sortField, 'createdAt')}">Sort by Created</option>
-        <option value="title" th:selected="${#strings.equals(sortField, 'title')}">Sort by Title</option>
+    <!-- Date range filters -->
+    <input type="date" name="dateFrom" th:value="${dateFrom}" />
+    <input type="date" name="dateTo" th:value="${dateTo}" />
+
+    <!-- Sorting -->
+    <select name="sortField">
+        <option value="updatedAt" th:selected="${sortField == 'updatedAt'}">Updated</option>
+        <option value="createdAt" th:selected="${sortField == 'createdAt'}">Created</option>
+        <option value="title" th:selected="${sortField == 'title'}">Title</option>
     </select>
 
-    <select name="sortDir" style="width:90px;">
-        <option value="desc" th:selected="${#strings.equals(sortDir, 'desc')}">DESC</option>
-        <option value="asc" th:selected="${#strings.equals(sortDir, 'asc')}">ASC</option>
+    <select name="sortDir">
+        <option value="desc" th:selected="${sortDir == 'desc'}">DESC</option>
+        <option value="asc" th:selected="${sortDir == 'asc'}">ASC</option>
     </select>
 
     <button type="submit">Apply</button>
     <a href="/" style="margin-left:10px;">Clear</a>
 </form>
 
-<div th:each="post : ${posts}" class="post-card">
-    <div class="post-title">
-        <a th:href="@{'/' + ${post.id}}" th:text="${post.title}">Title</a>
+
+<!-- Post List -->
+<div class="post-list">
+    <div class="post" th:each="post : ${posts}">
+        <div class="post-title">
+            <a th:href="@{'/' + ${post.id}}" th:text="${post.title}">Post title</a>
+        </div>
+        <div class="post-meta">
+            <span th:text="${post.author}">Author</span>,
+            <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">Date</span>
+        </div>
+        <div class="post-excerpt" th:text="${post.excerpt}">Excerpt text...</div>
     </div>
-    <div class="meta">
-        <span th:text="${post.author}">Author</span>,
-        <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">Date</span>
-    </div>
-    <div class="excerpt" th:text="${post.excerpt}">Excerpt text...</div>
 </div>
 
 <div class="pagination">
-    <a th:if="${hasPrev}" th:href="@{/(page=${currentPage - 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">&lt; Previous</a>
-    <a th:if="${hasNext}" th:href="@{/(page=${currentPage + 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">Next &gt;</a>
+    <a th:if="${hasPrev}"
+       th:href="@{/(page=${currentPage - 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">
+        &lt; Previous
+    </a>
+    <a th:if="${hasNext}"
+       th:href="@{/(page=${currentPage + 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">
+        Next &gt;
+    </a>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+        const tagSelect = document.getElementById("tagSelect");
+        try {
+            const res = await fetch("/tags");
+            const tags = await res.json();
+            tags.sort((a, b) => a.name.localeCompare(b.name));
+            tags.forEach(tag => {
+                const opt = document.createElement("option");
+                opt.value = tag.id;
+                opt.textContent = tag.name;
+                if (new URLSearchParams(window.location.search).getAll("tagId").includes(String(tag.id))) {
+                    opt.selected = true;
+                }
+                tagSelect.appendChild(opt);
+            });
+        } catch (e) {
+            console.error("Failed to load tags", e);
+        }
+    });
+</script>
 
 </body>
 </html>

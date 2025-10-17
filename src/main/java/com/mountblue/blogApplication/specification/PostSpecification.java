@@ -42,12 +42,12 @@ public class PostSpecification {
         };
     }
 
-    public static Specification<Post> isPublished(Boolean published){
+    public static Specification<Post> isPublished(Boolean isPublished){
         return (root, criteriaQuery, criteriaBuilder) -> {
-            if(published == null)
+            if(isPublished == null)
                 return null;
 
-            return criteriaBuilder.equal(root.get("published"), published);
+            return criteriaBuilder.equal(root.get("isPublished"), isPublished);
         };
     }
 
@@ -68,44 +68,15 @@ public class PostSpecification {
         };
     }
 
-
-//    public static Specification<Post> publishedBetween(LocalDateTime from, LocalDateTime to) {
-//        return (root, query, criteriaBuilder) -> {
-//            if(from == null || to == null) return null;
-//            if(from != null && to != null){
-//            return criteriaBuilder.between(root.get("publishedAt"), from, to);
-//            }
-//            else if (from != null){
-//                return criteriaBuilder.greaterThanOrEqualTo(root.get("publishedAt"), from);
-//            }
-//            else {
-//                return criteriaBuilder.lessThanOrEqualTo(root.get("publishedAt"), to);
-//            }
-//        };
-//    }
-//
     public static Specification<Post> hasAnyTag(List<Long> tagIds){
         return (root, criteriaQuery, criteriaBuilder) -> {
             if(tagIds == null || tagIds.isEmpty())
                 return null;
 
-
             Join<Post, Tag> tags =  root.join("tags", JoinType.INNER); //root is the Post entity
-            CriteriaBuilder.In<Long> inClause = criteriaBuilder.in(root.joinSet("tags").get("id"));
             criteriaQuery.distinct(true);
             return tags.get("id").in(tagIds);
         };
     }
-
-//
-//    public static Specification<Post> hasAllTags(List<Long> tagIds){
-//        return (root, query, criteriaBuilder) -> {
-//            if(tagIds == null || tagIds.isEmpty()) {
-//                return null;
-//            }
-//
-//            return criteriaBuilder.conjunction();
-//        };
-//    }
  }
 

@@ -29,19 +29,20 @@ public class Post {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Lob
     @Column(nullable = true, columnDefinition = "TEXT")
     private String excerpt;
 
-    @Lob
     @NotBlank
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(length = 255)
-    private String  author;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private User  author;
 
     private LocalDateTime publishedAt;
+
+    @Column(name = "is_published")
     private boolean isPublished = false;
 
 
@@ -66,55 +67,4 @@ public class Post {
     public void onUpdate() {
         updatedAt = Instant.now();
     }
-
-//    public void addTag(Tag tag) {
-//        this.tags.add(tag);
-//        tag.getPosts().add(this);
-//    }
-//
-//    public void removeTag(Tag tag) {
-//        this.tags.remove(tag);
-//        tag.getPosts().remove(this);
-//    }
-//
-//    public void setTags(Set<Tag> newTags) {
-//        for (Tag tag : new HashSet<>(this.tags)) {
-//            removeTag(tag);
-//        }
-//        if (newTags != null) {
-//            for (Tag tag : newTags) {
-//                addTag(tag);
-//            }
-//        }
-//    }
-//
-//    public void replaceTags(Set<Tag> newTags) {
-//        for (Tag tag : new HashSet<>(this.tags)) {
-//            removeTag(tag);
-//        }
-//        if (newTags != null) {
-//            for (Tag tag : newTags) {
-//                addTag(tag);
-//            }
-//        }
-//    }
-
-//    public String getOrGenerateExcerpt() {
-//        if (excerpt != null && !excerpt.isBlank()) {
-//            return excerpt;
-//        }+
-//        if (content == null) return "";
-//        int limit = 150;
-//        return content.length() <= limit ? content : content.substring(0, limit) + "...";
-//    }
-
-//    public void setPublished(boolean published) {
-//        this.isPublished = published;
-//        this.publishedAt = published ? LocalDateTime.now() : null;
-//    }
-
-//
-//    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private Set<Comment> comments = new HashSet<>();
-
 }

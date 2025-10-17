@@ -1,6 +1,5 @@
 package com.mountblue.blogApplication.controller;
 
-import com.mountblue.blogApplication.dto.TagDto;
 import com.mountblue.blogApplication.entity.Tag;
 import com.mountblue.blogApplication.service.TagService;
 import lombok.RequiredArgsConstructor;

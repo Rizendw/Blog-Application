@@ -25,7 +25,7 @@ public class CommentController {
         System.err.println("caled!!controler  called!!");
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", "Invalid data");
-            return "redirect:/" + postId;
+            return "redirect:/view" + postId;
         }
 
         commentService.addComment(postId, commentRequest);

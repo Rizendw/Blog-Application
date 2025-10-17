@@ -1,15 +1,18 @@
 package com.mountblue.blogApplication.controller;
 
-import com.mountblue.blogApplication.dto.CreatePostRequest;
+import com.mountblue.blogApplication.dto.PostRequest;
 import com.mountblue.blogApplication.dto.PostResponse;
 import com.mountblue.blogApplication.entity.Comment;
 import com.mountblue.blogApplication.entity.Tag;
+import com.mountblue.blogApplication.entity.User;
+import com.mountblue.blogApplication.service.UserService;
 import com.mountblue.blogApplication.service.CommentService;
 import com.mountblue.blogApplication.service.PostService;
 import com.mountblue.blogApplication.service.TagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,19 +31,7 @@ public class PostController {
     private final PostService postService;
     private final TagService tagService;
     private final CommentService commentService;
-
-//    @GetMapping
-//    public String listPosts(@RequestParam(defaultValue = "0") int page,
-//                            @RequestParam(defaultValue = "10") int size,
-//                            Model model) {
-//
-//        Page<PostResponse> posts = postService.getPaginatedPosts(page, size);
-//        model.addAttribute("posts", posts.getContent());
-//        model.addAttribute("currentPage", page);
-//        model.addAttribute("hasNext", posts.hasNext());
-//        model.addAttribute("hasPrev", posts.hasPrevious());
-//        return "/list";
-//    }
+    private final UserService userService;
 
     // list/search endpoint
     @GetMapping
@@ -56,10 +48,8 @@ public class PostController {
             @RequestParam(required = false) String sortDir,
             Model model) {
 
-        Instant from = null;
-        Instant to = null;
-        from = safeParse(dateFrom);
-        to = safeParse(dateTo);
+        Instant from = safeParse(dateFrom);
+        Instant to = safeParse(dateTo);
 
         Page<PostResponse> pageResult = postService.searchPosts(search, tagId, author, published, from, to, page, size, sortField, sortDir);
 
@@ -85,15 +75,22 @@ public class PostController {
 
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("createPostRequest", new CreatePostRequest("", "", "", java.util.List.of()));
+        User currentUser = userService.getCurrentUser();
+        if (currentUser == null) return "redirect:/login";
+
+        model.addAttribute("postRequest",
+                new PostRequest(null, null, "", "", false, Set.of()));
+        model.addAttribute("currentUser", currentUser);
         return "/create";
     }
 
     @PostMapping("/create")
-    public String handleCreateForm(@ModelAttribute("createPostRequest") @Valid CreatePostRequest request, Model model) {
-        PostResponse created = postService.createPost(request);
-        model.addAttribute("post", created);
-        return "/view";
+    public String handleCreateForm(@ModelAttribute("createPostRequest") @Valid PostRequest request) {
+        User currentUser = userService.getCurrentUser();
+        if (currentUser == null) return "redirect:/login";
+
+        postService.createPost(request);
+        return "redirect:/view";
     }
 
     @GetMapping("/{id}")
@@ -109,14 +106,19 @@ public class PostController {
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Long id, Model model) {
         PostResponse post = postService.getPostById(id);
-        CreatePostRequest dto = new CreatePostRequest(post.title(), post.content(), post.author(), post.tags());
-        model.addAttribute("createPostRequest", dto);
-        model.addAttribute("postId", id);
+        User currentUser = userService.getCurrentUser();
+
+        if (!currentUser.isAdmin() && !post.authorName().equals(currentUser.getName())) {
+            throw new AccessDeniedException("Access Denied");
+        }
+
+        model.addAttribute("post", post);
+        model.addAttribute("currentUser", currentUser);
         return "/create";
     }
 
     @PostMapping("/edit/{id}")
-    public String handleEditForm(@PathVariable Long id, @ModelAttribute("createPostRequest") @Valid CreatePostRequest request, Model model) {
+    public String handleEditForm(@PathVariable Long id, @ModelAttribute @Valid PostRequest request) {
         PostResponse updated = postService.updatePost(id, request);
         //model.addAttribute("post", updated);
         return "redirect:/" + updated.id();
@@ -136,101 +138,4 @@ public class PostController {
             return null; // just ignore bad date
         }
     }
-
-
-//    @GetMapping
-//    public String listAllPosts(
-//        @RequestParam(value = "start", required = false, defaultValue = "1")
-//        int start,
-//        @RequestParam(value = "limit", required = false, defaultValue = "10")
-//        int limit,
-//        @RequestParam(value = "sortField", required = false, defaultValue = "publishedAt")
-//        String sortField,
-//        @RequestParam(value = "order", required = false, defaultValue = "desc")
-//        String order,
-//        @RequestParam(value = "tagMode", required = false, defaultValue = "OR")
-//        String tagMode,
-//        @RequestParam(value = "tagId", required = false)
-//        List<Long> tagIds,
-//        @RequestParam(value = "authorId", required = false)
-//        Long authorId,
-//        @RequestParam(value = "search", required = false)
-//        String search,
-//        Model model){
-//
-//            int offset = Math.max(1, start) - 1;
-//            int pageNumber = offset / Math.max(1, limit);
-//            PageRequest pageable = PageRequest.of(pageNumber, limit);
-//
-//            Page<PostDto> page = postService.searchPosts(search, authorId, tagIds, tagMode, sortField, order, pageable);
-//            model.addAttribute("posts", page.getContent());
-//            model.addAttribute("total", page.getTotalElements());
-//            model.addAttribute("pageNumber", pageNumber);
-//            model.addAttribute("pageSize", limit);
-//            model.addAttribute("totalPages", page.getTotalPages());
-//            model.addAttribute("currentStart", start);
-//            model.addAttribute("allTags", tagService.listAllTags());
-//            model.addAttribute("search", search);
-//            model.addAttribute("tagIds", tagIds);
-//            model.addAttribute("tagMode", tagMode);
-//            model.addAttribute("sortField", sortField);
-//            model.addAttribute("order", order);
-//
-//            return "posts/list";
-//        }
-//
-//    @GetMapping("/new")
-//    public String newPostForm(Model model) {
-//        model.addAttribute("postDto", new PostDto());
-//        model.addAttribute("allTags", tagService.listAllTags());
-//        return "posts/form";
-//    }
-//
-//    @PostMapping
-//    public String createPost(@ModelAttribute("postDto") @Valid PostDto postDto, BindingResult bindingResult, Model model) {
-//        if (bindingResult.hasErrors()) {
-//            model.addAttribute("allTags", tagService.listAllTags());
-//            return "posts/form";
-//        }
-//        PostDto saved = postService.createPost(postDto);
-//        return "redirect:/posts/" + saved.getId();
-//    }
-//
-//    @GetMapping("/{id}")
-//    public String showPost(@PathVariable("id") Long id, Model model){
-//        PostDto dto = postService.getPostById(id)
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not Found"));
-//        model.addAttribute("post", dto);
-//
-//        List<CommentDto> comments = commentService.listApprovedCommentsForPost(id);
-//        model.addAttribute("comments", comments);
-//        model.addAttribute("newComment", new CommentDto());
-//        return "posts/detail";
-//    }
-//
-//    @GetMapping("/{id}/edit")
-//    public String editPostForm(@PathVariable Long id, Model model) {
-//        var opt = postService.getPostById(id);
-//        if(opt.isEmpty()) {
-//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found");
-//        }
-//        PostDto dto = opt.get();
-//        dto.setTags(String.join(",", dto.getTagList() != null ? dto.getTagList() : List.of()));
-//        model.addAttribute("postDto", dto);
-//        model.addAttribute("allTags", tagService.listAllTags());
-//
-//        return "posts/form";
-//    }
-//
-//    @PostMapping("/{id}/edit")
-//    public String updatePost(@PathVariable Long id, @ModelAttribute("postDto") @Valid PostDto postDto, BindingResult bindingResult, Model model){
-//        if (bindingResult.hasErrors()) {
-//            model.addAttribute("allTags", tagService.listAllTags());
-//            return "posts/form";
-//        }
-//        PostDto updated = postService.updatePost(id, postDto);
-//        return "redirect:/posts/" + updated.getId();
-//    }
-//
-
 }

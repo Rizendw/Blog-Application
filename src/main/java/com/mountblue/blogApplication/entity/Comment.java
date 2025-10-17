@@ -19,23 +19,22 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
-    private String name;
+//    @NotBlank
+//    private String name;
+//
+//    @Email
+//    private String email;
+    // Replace name/email fields with:
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Email
-    private String email;
-
-    @Lob
     @Column(nullable = false, columnDefinition = "TEXT")
     private String comment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
-
-//    @Column(name = "is_approved", nullable = false)
-//    private boolean isApproved = true;
-
 
     private Instant createdAt;
     private Instant updatedAt;

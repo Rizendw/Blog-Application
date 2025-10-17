@@ -29,7 +29,10 @@
 
         <div class="form-group">
             <label for="author">Author</label>
-            <input type="text" id="author" th:field="*{author}" required/>
+            <select th:if="${#authorization.expression('hasRole(''ADMIN'')')}" name="authorId">
+                <option th:each="user : ${allUsers}" th:value="${user.id}" th:text="${user.name}"></option>
+            </select>
+
         </div>
 
         <div class="form-group">

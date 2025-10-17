@@ -8,8 +8,11 @@ public record PostResponse(
         String title,
         String content,
         String excerpt,
-        String author,
+        Long authorId,
+        String authorName,
+        boolean isPublished,
+        List<String> tags,
         Instant createdAt,
-        List<String> tags
+        Instant updatedAt
 ) {
 }

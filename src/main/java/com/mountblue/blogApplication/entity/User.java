@@ -1,43 +1,43 @@
 package com.mountblue.blogApplication.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Getter
+@Email
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
+    @NotBlank
     @Column(nullable = false)
     private String name;
 
     @Email
     @NotBlank
-    @Setter
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Setter
+    @NotBlank
+    @Size(min = 8, max = 16, message = "Password must be at least 8 characters long")
+    @Column(nullable = false)
     private String password;
 
-    @Setter
+    @Column(nullable = false)
     private boolean isAdmin = false;
 
     @CreatedDate
