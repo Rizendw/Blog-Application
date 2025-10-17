@@ -12,9 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(
-        name = "tags",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"normalized_name"}))
+@Table(name = "tags")
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,12 +26,14 @@ public class Tag {
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 100, unique = true)
     private String nameLower;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    private Instant updatedAt; @Column(nullable = false, unique = true)
+    @Column(name = "updated_at", nullable = false, updatable = false)
+    private Instant updatedAt;
 
     @ManyToMany(mappedBy = "tags")
     private Set<Post> posts = new HashSet<>();
@@ -43,15 +43,4 @@ public class Tag {
         createdAt = Instant.now();
         updatedAt = createdAt;
     }
-
-
-//    public void addPost(Post post) {
-//        posts.add(post);
-//        post.getTags().add(this);
-//    }
-//
-//    public void removePost(Post post) {
-//        posts.remove(post);
-//        post.getTags().remove(this);
-//    }
 }

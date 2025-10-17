@@ -41,7 +41,8 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new NoSuchElementException("Post not found"));
         System.err.println("aa ya aa gy!!!!!a");
         Comment comment = new Comment();
-        comment.setUser(currentUser);
+        comment.setAUser(currentUser);
+        comment.setName(currentUser.getName());
         comment.setComment(commentRequest.comment());
         comment.setPost(post);
         commentRepository.save(comment);
@@ -55,7 +56,7 @@ public class CommentServiceImpl implements CommentService {
         Comment existing = commentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-        if (!currentUser.isAdmin() && !existing.getUser().getId().equals(currentUser.getId())) {
+        if (!currentUser.isAdmin() && !existing.getAUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("Cannot modify another user’s comment");
         }
         commentRepository.save(existing);
@@ -75,7 +76,7 @@ public class CommentServiceImpl implements CommentService {
         Comment existing = commentRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Comment not found"));
         Long postId = existing.getPost().getId();
-        if (!currentUser.isAdmin() && !existing.getUser().getId().equals(currentUser.getId())) {
+        if (!currentUser.isAdmin() && !existing.getAUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("Cannot modify another user’s comment");
         }
         commentRepository.delete(existing);

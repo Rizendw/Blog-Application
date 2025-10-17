@@ -3,12 +3,8 @@ package com.mountblue.blogApplication.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,10 +22,10 @@ public class Post {
     private Long id;
 
     @NotBlank
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String title;
 
-    @Column(nullable = true, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String excerpt;
 
     @NotBlank
@@ -37,16 +33,22 @@ public class Post {
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    private User  author;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User aUser;
 
-    private LocalDateTime publishedAt;
+    @Column( nullable = false)
+    private String author;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
 
     @Column(name = "is_published")
     private boolean isPublished = false;
 
-
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -58,13 +60,17 @@ public class Post {
     private Set<Tag> tags = new HashSet<>();
 
     @PrePersist
-    public void onCreate() {
-        createdAt = Instant.now();
-        updatedAt = createdAt;
-    }
-
     @PreUpdate
-    public void onUpdate() {
-        updatedAt = Instant.now();
+    public void preSave() {
+        Instant now = Instant.now();
+
+        if (createdAt == null) {
+            createdAt = now;
+        }
+        updatedAt = now;
+
+        if (isPublished && publishedAt == null) {
+            publishedAt = now;
+        }
     }
 }

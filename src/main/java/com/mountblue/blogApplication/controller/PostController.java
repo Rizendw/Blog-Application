@@ -2,8 +2,8 @@ package com.mountblue.blogApplication.controller;
 
 import com.mountblue.blogApplication.dto.PostRequest;
 import com.mountblue.blogApplication.dto.PostResponse;
+import com.mountblue.blogApplication.dto.TagRequest;
 import com.mountblue.blogApplication.entity.Comment;
-import com.mountblue.blogApplication.entity.Tag;
 import com.mountblue.blogApplication.entity.User;
 import com.mountblue.blogApplication.service.UserService;
 import com.mountblue.blogApplication.service.CommentService;
@@ -33,7 +33,6 @@ public class PostController {
     private final CommentService commentService;
     private final UserService userService;
 
-    // list/search endpoint
     @GetMapping
     public String listPosts(
             @RequestParam(defaultValue = "0") int page,
@@ -61,7 +60,7 @@ public class PostController {
         model.addAttribute("totalElements", pageResult.getTotalElements());
 
 
-        List<Tag> allTags = tagService.listAllTags();
+        List<TagRequest> allTags = tagService.listAllTags();
         model.addAttribute("allTags", allTags);
 
 
@@ -76,7 +75,9 @@ public class PostController {
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         User currentUser = userService.getCurrentUser();
-        if (currentUser == null) return "redirect:/login";
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
 
         model.addAttribute("postRequest",
                 new PostRequest(null, null, "", "", false, Set.of()));
@@ -135,7 +136,7 @@ public class PostController {
         try {
             return Instant.parse(value);
         } catch (DateTimeParseException e) {
-            return null; // just ignore bad date
+            return null;
         }
     }
 }

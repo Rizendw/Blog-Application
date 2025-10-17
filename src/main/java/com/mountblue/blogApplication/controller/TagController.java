@@ -1,6 +1,7 @@
 package com.mountblue.blogApplication.controller;
 
-import com.mountblue.blogApplication.entity.Tag;
+
+import com.mountblue.blogApplication.dto.TagRequest;
 import com.mountblue.blogApplication.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +20,8 @@ public class TagController {
 
     @GetMapping
     @ResponseBody
-    public ResponseEntity<List<Tag>> listTags() {
-        List<Tag> tags = tagService.listAllTags();
-        List<TagDto> dtos = tags.stream()
-                .map(t -> new TagDto(t.getId(), t.getName())).toList();
+    public ResponseEntity<List<TagRequest>>listTags() {
+        List<TagRequest> tags = tagService.listAllTags();
         return ResponseEntity.ok(tags);
     }
-
-    private record TagDto(Long id, String name) {}
 }

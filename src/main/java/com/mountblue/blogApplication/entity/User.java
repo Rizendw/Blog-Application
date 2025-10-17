@@ -5,14 +5,14 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
 @Getter
+@Setter
 @Email
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,12 +39,4 @@ public class User {
 
     @Column(nullable = false)
     private boolean isAdmin = false;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

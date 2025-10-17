@@ -43,13 +43,16 @@ public class PostServiceImpl  implements PostService {
         post.setTitle(request.title());
         post.setContent(request.content());
         post.setExcerpt(generateExcerpt(request.content()));
+        post.setPublished(request.isPublished());
         post.setTags(normalizeAndFindTags(request.tagList()));
 
         if (currentUser.isAdmin() && request.authorId() != null) {
             User chosenAuthor = userService.findById(request.authorId());
-            post.setAuthor(chosenAuthor);
+            post.setAUser(chosenAuthor);
+            post.setAuthor(chosenAuthor.getName());
         } else {
-            post.setAuthor(currentUser);
+            post.setAUser(currentUser);
+            post.setAuthor(currentUser.getName());
         }
 
         Post saved = postRepository.save(post);
@@ -83,10 +86,11 @@ public class PostServiceImpl  implements PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (!currentUser.isAdmin() && !post.getAuthor().getId().equals(currentUser.getId())) {
+        if (!currentUser.isAdmin() && !post.getAUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You cannot edit this post");
         }
 
+        post.setAuthor(post.getAUser().getName());
         post.setTitle(postRequest.title());
         post.setContent(postRequest.content());
         post.setExcerpt(generateExcerpt(postRequest.content()));
@@ -103,7 +107,7 @@ public class PostServiceImpl  implements PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (!currentUser.isAdmin() && !post.getAuthor().getId().equals(currentUser.getId())) {
+        if (!currentUser.isAdmin() && !post.getAUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You cannot delete this post");
         }
         postRepository.delete(post);
@@ -132,15 +136,14 @@ public class PostServiceImpl  implements PostService {
         return new PageImpl<>(responses, pageable, posts.getTotalElements());
     }
 
-        //  HELPER METHODS
         private PostResponse toDto(Post saved) {
             return new PostResponse(
                     saved.getId(),
                     saved.getTitle(),
                     saved.getContent(),
                     saved.getExcerpt(),
-                    saved.getAuthor() != null ? saved.getAuthor().getId() : null,
-                    saved.getAuthor() != null ? saved.getAuthor().getName() : "Anonymous",
+                    saved.getAuthor() != null ? saved.getAUser().getId() : null,
+                    saved.getAuthor() != null ? saved.getAUser().getName() : "Anonymous",
                     saved.isPublished(),
                     saved.getTags().stream().map(Tag::getName).collect(toList()),
                     saved.getCreatedAt(),
@@ -164,15 +167,11 @@ public class PostServiceImpl  implements PostService {
         return tags;
     }
 
-    /** Utility to strip simple HTML tags (best-effort). */
     private String stripHtml(String text) {
         if (text == null) return "";
         return text.replaceAll("<[^>]*>", " ");
     }
 
-    /**
-     * Generate excerpt: first 250 words, extend to next sentence terminator (.?!)
-     */
     private String generateExcerpt(String content) {
         if (content == null || content.isBlank()) return "";
 
@@ -181,14 +180,12 @@ public class PostServiceImpl  implements PostService {
             return content.trim();
         }
 
-        // Join first 250 words
         String firstPart = String.join(" ", Arrays.copyOfRange(words, 0, 250));
         int endIndex = findSentenceEnd(content, firstPart.length());
         String excerpt = content.substring(0, endIndex).trim();
         return excerpt;
     }
 
-    /** Find the nearest sentence end ('.', '?', '!') after the given index */
     private int findSentenceEnd(String text, int startIndex) {
         int len = text.length();
         for (int i = startIndex; i < len; i++) {
@@ -197,7 +194,6 @@ public class PostServiceImpl  implements PostService {
                 return i + 1;
             }
         }
-        // no further sentence terminator — return whole text
         return len;
     }
 }

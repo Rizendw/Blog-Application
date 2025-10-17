@@ -19,15 +19,15 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @NotBlank
-//    private String name;
-//
-//    @Email
-//    private String email;
-    // Replace name/email fields with:
+    @NotBlank
+    private String name;
+
+    @Email
+    private String email;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User aUser;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String comment;
@@ -36,7 +36,10 @@ public class Comment {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist
