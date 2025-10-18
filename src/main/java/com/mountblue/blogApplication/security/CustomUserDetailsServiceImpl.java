@@ -2,19 +2,17 @@ package com.mountblue.blogApplication.security;
 
 import com.mountblue.blogApplication.entity.User;
 import com.mountblue.blogApplication.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsServiceImpl implements UserDetailsService {
 
 
     private final UserRepository userRepository;
-
-    public CustomUserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

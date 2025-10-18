@@ -19,6 +19,7 @@ public class AuthenticationController {
 
     @GetMapping("/signup")
     public String SignupPage() {
+        System.err.println("Signup Page created");
         return "/signup";
     }
 
@@ -30,12 +31,13 @@ public class AuthenticationController {
             @RequestParam String confirmPassword,
             Model model
     ) {
+        System.err.println("i'm in signup post mapping");
         if (!password.equals(confirmPassword)) {
             model.addAttribute("error", "Passwords do not match");
             return "/signup";
         }
-        if (password.length() < 8 || password.length() > 16) {
-            model.addAttribute("error", "Password must be between 8 and 16 characters");
+        if (password.length() < 2) {
+            model.addAttribute("error", "Password must be between greater than 2 characters");
             return "/signup";
         }
 
