@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "tags")
-@Getter @Setter
+@Table(name = "tags", uniqueConstraints = @UniqueConstraint(columnNames = "name_lower"))
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -37,7 +37,14 @@ public class Tag {
 
     @PrePersist
     public void onCreate() {
+        this.nameLower = name.toLowerCase();
         createdAt = Instant.now();
         updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        this.nameLower = name.toLowerCase();
+        updatedAt = Instant.now();
     }
 }

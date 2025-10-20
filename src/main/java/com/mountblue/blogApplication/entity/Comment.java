@@ -9,7 +9,8 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "comments")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,7 +27,7 @@ public class Comment {
     private String email;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User aUser;
 
     @Column(nullable = false, columnDefinition = "TEXT")

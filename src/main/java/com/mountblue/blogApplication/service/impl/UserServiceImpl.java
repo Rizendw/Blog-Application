@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -18,9 +20,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(String name, String email, String password) {
-        System.err.println("i'm in Registering user");
-        System.err.println("passwordEncoder ne ye diya = " + passwordEncoder);
-
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists: " + email);
         }
@@ -48,5 +47,10 @@ public class UserServiceImpl implements UserService {
     public User findById(Long authorId) {
         return userRepository.findById(authorId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + authorId));
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }

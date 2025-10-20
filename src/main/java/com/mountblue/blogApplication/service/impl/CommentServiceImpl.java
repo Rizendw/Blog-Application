@@ -10,11 +10,14 @@ import com.mountblue.blogApplication.service.CommentService;
 import com.mountblue.blogApplication.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -31,54 +34,70 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional
-    public void addComment(Long postId, CommentRequest commentRequest) {
+    public Comment addComment(Long postId, CommentRequest commentRequest) {
         User currentUser = userService.getCurrentUser();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Login required to comment");
-        }
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NoSuchElementException("Post not found"));
-        System.err.println("aa ya aa gy!!!!!a");
-        Comment comment = new Comment();
-        comment.setAUser(currentUser);
-        comment.setName(currentUser.getName());
-        comment.setComment(commentRequest.comment());
-        comment.setPost(post);
-        commentRepository.save(comment);
+
+        Comment comment = Comment.builder()
+                .name(commentRequest.name())
+                .email(commentRequest.email())
+                .comment(commentRequest.comment())
+                .post(post)
+                .aUser(currentUser)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+
+        return commentRepository.save(comment);
     }
 
 
     @Override
     @Transactional
-    public void updateComment(Long id, CommentRequest updated) {
+    @PreAuthorize("isAuthenticated()")
+    public Comment updateComment(Long id, CommentRequest updated) {
         User currentUser = userService.getCurrentUser();
         Comment existing = commentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new NoSuchElementException("Comment not found"));
 
-        if (!currentUser.isAdmin() && !existing.getAUser().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("Cannot modify another user’s comment");
+        boolean isAdmin = currentUser != null && Boolean.TRUE.equals(currentUser.getIsAdmin());
+        boolean isAuthor = currentUser != null && existing.getAUser() != null
+                && Objects.equals(existing.getAUser().getId(), currentUser.getId());
+
+        if (!isAdmin && !isAuthor) {
+            throw new AccessDeniedException("You are not authorized to modify this comment");
         }
-        commentRepository.save(existing);
+
+        existing.setComment(updated.comment());
+        existing.setUpdatedAt(Instant.now());
+        return commentRepository.save(existing);
     }
 
     @Override
     public Comment getById(Long id) {
         return commentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found"));
+                .orElseThrow(() -> new NoSuchElementException("Comment not found"));
     }
 
     @Override
     @Transactional
+    @PreAuthorize("isAuthenticated()")
     public Long deleteComment(Long id) {
         User currentUser = userService.getCurrentUser();
 
         Comment existing = commentRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Comment not found"));
-        Long postId = existing.getPost().getId();
-        if (!currentUser.isAdmin() && !existing.getAUser().getId().equals(currentUser.getId())) {
-            throw new AccessDeniedException("Cannot modify another user’s comment");
+
+        boolean isAdmin = currentUser != null && Boolean.TRUE.equals(currentUser.getIsAdmin());
+        boolean isAuthor = currentUser != null && existing.getAUser() != null
+                && Objects.equals(existing.getAUser().getId(), currentUser.getId());
+
+        if (!isAdmin && !isAuthor) {
+            throw new AccessDeniedException("You are not authorized to modify this comment");
         }
+        Long postId = existing.getPost().getId();
         commentRepository.delete(existing);
         return postId;
     }

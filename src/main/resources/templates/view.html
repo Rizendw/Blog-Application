@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8"/>
     <title th:text="${post.title}">Blog Post</title>
@@ -79,13 +80,24 @@
 <body>
 <div class="container">
 
-    <!-- Top navigation: Login / Signup and Home -->
     <div class="nav-top">
         <div>
+            <!-- When user is NOT logged in -->
+            <span sec:authorize="!isAuthenticated()">
             <a href="/login">Login</a> | <a href="/signup">Sign Up</a>
+        </span>
+
+            <!-- When user IS logged in -->
+            <span sec:authorize="isAuthenticated()">
+            <span th:text="${#authentication.name}"></span>
+            &nbsp;
+            <a href="/logout">Logout</a>
+        </span>
         </div>
+
         <a href="/">Home</a>
     </div>
+
 
     <!-- Second navigation: Create / Edit / Delete -->
     <div class="nav">
@@ -106,7 +118,7 @@
     <h1 th:text="${post.title}">Blog post title</h1>
 
     <!-- Post metadata -->
-    <div class="meta" th:text="${post.author + ', ' + #temporals.format(post.createdAt, 'dd/MM/yyyy')}"></div>
+    <div class="meta" th:text="${post.authorName() + ', ' + #temporals.format(post.createdAt, 'dd/MM/yyyy')}"></div>
 
     <!-- Post content -->
     <p th:utext="${post.content}">Post content...</p>
@@ -134,11 +146,16 @@
     <!-- Add comment -->
     <h4>Add a comment</h4>
     <form th:action="@{'/comments/add/' + ${post.id}}" method="post" class="comment-form">
-        <input type="text" name="name" placeholder="Your name" required/><br>
         <input type="text" name="name" th:value="${#authentication.name}" readonly />
+
+        <input type="text" name="name" placeholder="Your name" required th:if="${#authentication == null}" />
 
         <textarea name="comment" placeholder="Write your comment" rows="3" cols="60" required></textarea><br>
         <button type="submit">Add Comment</button>
+        <div th:if="${param.commentSuccess}">
+            <p style="color:green;">Comment added successfully!</p>
+        </div>
+
     </form>
 
 </div>

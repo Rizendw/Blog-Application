@@ -13,14 +13,19 @@ public class AuthenticationController {
     private final UserService userService;
 
     @GetMapping("/login")
-    public String loginPage() {
-        return "/login";
+    public String loginPage(@RequestParam(value = "success", required = false)
+                                String success, Model model) {
+        if (success != null) {
+            model.addAttribute("message", "Registration successful! Please log in.");
+        }
+        return "login";
     }
 
     @GetMapping("/signup")
-    public String SignupPage() {
-        System.err.println("Signup Page created");
-        return "/signup";
+    public String SignupPage(Model model) {
+        model.addAttribute("error", null);
+
+        return "signup";
     }
 
     @PostMapping("/signup")
@@ -31,14 +36,13 @@ public class AuthenticationController {
             @RequestParam String confirmPassword,
             Model model
     ) {
-        System.err.println("i'm in signup post mapping");
         if (!password.equals(confirmPassword)) {
             model.addAttribute("error", "Passwords do not match");
-            return "/signup";
+            return "signup";
         }
         if (password.length() < 2) {
-            model.addAttribute("error", "Password must be between greater than 2 characters");
-            return "/signup";
+            model.addAttribute("error", "Password must be greater than 2 characters");
+            return "signup";
         }
 
         userService.registerUser(name, email, password);

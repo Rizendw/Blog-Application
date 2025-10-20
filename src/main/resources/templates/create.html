@@ -1,51 +1,81 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8"/>
-    <title th:text="${postId != null ? 'Edit Post' : 'Create Post'}">Create/Edit Post</title>
+    <meta charset="UTF-8" />
+    <title th:text="${postId != null} ? 'Edit Blog' : 'Create Blog'">Create/Edit Post</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         .container { max-width: 700px; margin: auto; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; }
-        input[type=text], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        input[type=text], textarea, select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
         .nav { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        button { padding: 8px 16px; }
     </style>
 </head>
+
 <body>
 <div class="container">
     <div class="nav">
-        <a href="/">Home</a>
-        <h2 th:text="${postId != null ? 'Edit Post' : 'Create New Post'}"></h2>
+        <a th:href="@{/}">Home</a>
+        <h2 th:text="${postId != null} ? 'Edit Blog' : 'Create New Blog'"></h2>
     </div>
 
-    <form th:action="${postId != null} ? @{/edit/{id}(id=${postId})} : @{/create}"
-          th:object="${createPostRequest}" method="post">
+    <!-- ✅ Only one form -->
+    <form method="post"
+          th:action="${postId} != null ? @{/edit/{id}(id=${postId})} : @{/create}"
+          th:object="${postRequest}">
 
+        <!-- Hidden ID for edit -->
+        <input type="hidden" th:if="${postId != null}" name="id" th:value="${postId}" />
+
+        <!-- Title -->
         <div class="form-group">
             <label for="title">Title</label>
-            <input type="text" id="title" th:field="*{title}" required maxlength="255"/>
+            <input type="text" id="title" th:field="*{title}" required maxlength="255" />
         </div>
 
-        <div class="form-group">
+        <!-- Author (visible only to Admin) -->
+        <div class="form-group" th:if="${#authorization.expression('hasRole(''ADMIN'')')}">
             <label for="author">Author</label>
-            <select th:if="${#authorization.expression('hasRole(''ADMIN'')')}" name="authorId">
-                <option th:each="user : ${allUsers}" th:value="${user.id}" th:text="${user.name}"></option>
+            <select id="author" name="authorId">
+                <option th:each="user : ${allUsers}"
+                        th:value="${user.id}"
+                        th:text="${user.name}">
+                </option>
             </select>
-
         </div>
 
+        <!-- Content -->
         <div class="form-group">
             <label for="content">Content</label>
             <textarea id="content" th:field="*{content}" rows="10" required></textarea>
         </div>
 
+        <!-- Tags -->
         <div class="form-group">
             <label for="tags">Tags (comma-separated)</label>
-            <input type="text" id="tags" th:field="*{tagList}" placeholder="spring,java,boot"/>
+            <input type="text" id="tags" th:field="*{tagList}" placeholder="spring,java,boot" />
         </div>
 
-        <button type="submit" th:text="${postId != null ? 'Update Post' : 'Create Post'}"></button>
+        <!-- Published -->
+        <div class="form-group">
+            <label>
+                <input type="checkbox" th:field="*{isPublished}" /> Published
+            </label>
+        </div>
+
+        <!-- Submit -->
+        <div class="form-group">
+            <button type="submit"
+                    th:text="${postId != null} ? 'Update Blog' : 'Create Blog'">
+                Create Post
+            </button>
+        </div>
     </form>
 </div>
 </body>

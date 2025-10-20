@@ -5,6 +5,8 @@ import com.mountblue.blogApplication.entity.Comment;
 import com.mountblue.blogApplication.service.CommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -19,35 +21,25 @@ public class CommentController {
 
     @PostMapping("/add/{postId}")
     public String addComment(@PathVariable Long postId,
-                             @ModelAttribute @Valid CommentRequest commentRequest,
-                             BindingResult bindingResult,
+                             @ModelAttribute("comment") @Valid CommentRequest commentRequest,
                              Model model) {
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("error", "Invalid data");
-            return "redirect:/view" + postId;
-        }
-
-        commentService.addComment(postId, commentRequest);
-        return "redirect:/" + postId;
+            commentService.addComment(postId, commentRequest);
+            return "redirect:/" + postId + "?commentSuccess";//review this
     }
 
     @PostMapping("/{id}/edit")
+    @PreAuthorize("@authz.isCommentOwnerOrAdmin(#id)")
     public String updateComment(@PathVariable Long id,
-                                @ModelAttribute @Valid CommentRequest comment,
-                                BindingResult bindingResult,
+                                @ModelAttribute("comment") @Valid CommentRequest commentRequest,
                                 Model model) {
-        Comment existing = commentService.getById(id);
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("error", "Invalid input");
-            return "redirect:/" + existing.getPost().getId();
-        }
-        commentService.updateComment(existing.getId(), comment);
-        return "redirect:/" + existing.getPost().getId();
+        commentService.updateComment(id, commentRequest);
+        return "redirect:/";
     }
 
     @PostMapping("/{id}/delete")
+    @PreAuthorize("@authz.isCommentOwnerOrAdmin(#id)")
     public String deleteComment(@PathVariable Long id) {
-        Long postId = commentService.deleteComment(id);
-        return "redirect:/" + postId;
+        commentService.deleteComment(id);
+        return "redirect:/";
     }
 }

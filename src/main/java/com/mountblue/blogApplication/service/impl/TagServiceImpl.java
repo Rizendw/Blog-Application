@@ -8,8 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -21,7 +23,27 @@ public class TagServiceImpl implements TagService {
 
     @Override
     public TagRequest createTag(TagRequest request) {
-        Tag saved = tagRepository.save(Tag.builder().name(request.name()).build());
+        if (request == null || request.name() == null || request.name().isBlank()) {
+            throw new IllegalArgumentException("Tag name cannot be empty");
+        }
+
+        String normalized = request.name().trim();
+        String nameLower = normalized.toLowerCase(Locale.ROOT);
+
+        Optional<Tag> existing = tagRepository.findByNameLower(nameLower);
+        Tag saved;
+        if (existing.isPresent()) {
+            saved = existing.get();
+        } else {
+            Tag tag = Tag.builder()
+                    .name(normalized)
+                    .nameLower(nameLower)
+                    .createdAt(Instant.now())
+                    .updatedAt(Instant.now())
+                    .build();
+            saved = tagRepository.save(tag);
+        }
+
         return map(saved);
     }
 

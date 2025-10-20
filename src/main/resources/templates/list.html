@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8"/>
     <title>My Blog Application</title>
@@ -98,13 +99,26 @@
 
 <h1>My Blog Application</h1>
 
-<div class="top-bar">
+<div class="top-bar" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
     <div><a href="/create">+ Create New Post</a></div>
-    <div>
+
+    <!-- If user is not logged in -->
+    <div sec:authorize="isAnonymous()">
         <a href="/login" style="margin-right:10px;">Login</a>
         <a href="/signup">Sign Up</a>
     </div>
+
+    <!-- If user is logged in -->
+    <div sec:authorize="isAuthenticated()">
+        <form th:action="@{/logout}" method="post" style="display:inline;">
+            <span sec:authentication="name" style="margin-right:10px;"></span>
+            <button type="submit" style="border:none; background:none; color:blue; cursor:pointer;">
+                Logout
+            </button>
+        </form>
+    </div>
 </div>
+
 
 <form method="get" th:action="@{/}">
 
@@ -159,7 +173,7 @@
             <a th:href="@{'/' + ${post.id}}" th:text="${post.title}">Post title</a>
         </div>
         <div class="post-meta">
-            <span th:text="${post.author}">Author</span>,
+            <span th:text="${post.authorName()}">Author</span>,
             <span th:text="${#temporals.format(post.createdAt, 'dd/MM/yyyy')}">Date</span>
         </div>
         <div class="post-excerpt" th:text="${post.excerpt}">Excerpt text...</div>

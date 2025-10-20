@@ -2,21 +2,35 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
 <h1>Create account</h1>
+<div th:if="${error}" th:text="${error}" style="color: red;"></div>
+
 <form th:action="@{/signup}" method="post">
     <label>Name</label><br>
-    <input type="text" name="name"/><br>
+    <input type="text" name="name" placeholder="Full Name"/><br>
 
     <label>Email</label><br>
-    <input type="email" name="email"/><br>
+    <input type="email" name="email" placeholder="Email"/><br>
 
     <label>Password</label><br>
-    <input type="password" name="password"/><br>
+    <input type="password" name="password" placeholder="Password"/><br>
 
     <label>Confirm Password</label><br>
-    <input type="password" name="confirmPassword"/><br>
+    <input type="password" name="confirmPassword" placeholder="Confirm Password"/><br>
 
     <button type="submit">Submit</button>
 </form>

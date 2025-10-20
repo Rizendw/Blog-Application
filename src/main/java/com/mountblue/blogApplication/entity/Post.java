@@ -1,8 +1,8 @@
 package com.mountblue.blogApplication.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -36,14 +36,14 @@ public class Post {
     @JoinColumn(name = "user_id", nullable = false)
     private User aUser;
 
-    @Column( nullable = false)
+    @Column(nullable = false)
     private String author;
 
     @Column(name = "published_at")
     private Instant publishedAt;
 
     @Column(name = "is_published")
-    private boolean isPublished = false;
+    private Boolean isPublished = false;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -52,25 +52,25 @@ public class Post {
     private Instant updatedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "post_tags",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id")
-    )
+    @JoinTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"), inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags = new HashSet<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Comment> comments = new HashSet<>();
+
+
     @PrePersist
-    @PreUpdate
-    public void preSave() {
+    public void prePersist() {
         Instant now = Instant.now();
-
-        if (createdAt == null) {
-            createdAt = now;
-        }
+        createdAt = now;
         updatedAt = now;
-
-        if (isPublished && publishedAt == null) {
-            publishedAt = now;
-        }
+        if (isPublished != null && isPublished && publishedAt == null) publishedAt = now;
     }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+        if (isPublished != null && isPublished && publishedAt == null) publishedAt = updatedAt;
+    }
+
 }

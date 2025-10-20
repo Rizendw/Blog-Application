@@ -10,7 +10,7 @@ public record PostRequest(
         Long authorId,
         @NotBlank @Size(max = 255) String title,
         @NotBlank String content,
-        boolean isPublished,
+        Boolean isPublished,
         Set<String> tagList
 ) {
 }

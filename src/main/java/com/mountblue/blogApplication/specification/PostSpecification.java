@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -20,13 +19,15 @@ public class PostSpecification {
                return null;
 
            String pattern = "%" + text.trim().toLowerCase() + "%";
+
            Join<Post, Tag> tags = root.join("tags", JoinType.LEFT);
-           criteriaQuery.distinct(true);    //what criteria query doing
-           return criteriaBuilder.or(   //What criteriaBuilder returns
+           criteriaQuery.distinct(true);
+
+           return criteriaBuilder.or(
                criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), pattern),
                criteriaBuilder.like(criteriaBuilder.lower(root.get("author")), pattern),
                criteriaBuilder.like(criteriaBuilder.lower(root.get("content")), pattern),
-               criteriaBuilder.like(criteriaBuilder.lower(tags.get("name")), pattern)
+               criteriaBuilder.like(criteriaBuilder.lower(tags.get("nameLower")), pattern)
            );
 
         });
@@ -56,7 +57,7 @@ public class PostSpecification {
             if(from == null || to == null)
                 return null;
 
-            else if(to == null){
+            if(to == null){
                 return criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), from);
             }
             else if (from == null){

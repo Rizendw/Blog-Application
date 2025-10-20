@@ -1,6 +1,5 @@
 package com.mountblue.blogApplication.repository;
 
-import com.mountblue.blogApplication.dto.TagRequest;
 import com.mountblue.blogApplication.entity.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

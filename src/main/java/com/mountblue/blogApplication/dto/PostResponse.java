@@ -2,6 +2,7 @@ package com.mountblue.blogApplication.dto;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 public record PostResponse(
         Long id,
@@ -10,8 +11,8 @@ public record PostResponse(
         String excerpt,
         Long authorId,
         String authorName,
-        boolean isPublished,
-        List<String> tags,
+        Boolean isPublished,
+        Set<String> tags,
         Instant createdAt,
         Instant updatedAt
 ) {

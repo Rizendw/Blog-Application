@@ -4,9 +4,8 @@ import com.mountblue.blogApplication.security.CustomUserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -24,8 +24,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception  {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/view/**").permitAll()
-                        .requestMatchers("/signup").permitAll()
+                        .requestMatchers(
+                                "/","{id}", "/view/**",
+                                "/signup", "/login",
+                                "/comments/add/**"
+                        ).permitAll()
+                        .requestMatchers("/create/**", "/edit/**",
+                                "/delete/**", "/comments/edit/**",
+                                "/comments/delete/**"
+                        ).authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -48,21 +55,15 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        System.err.println("Password encoder bean created");
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder);
-        return authProvider;
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(customUserDetailsService);
+        authenticationProvider.setPasswordEncoder(passwordEncoder);
+        return authenticationProvider;
     }
 
-//    @Bean
-//    AuthenticationManager authenticationManager(
-//            AuthenticationConfiguration authenticationConfiguration) throws Exception {
-//        return authenticationConfiguration.getAuthenticationManager();
-//    }
 }

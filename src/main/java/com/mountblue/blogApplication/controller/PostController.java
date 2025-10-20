@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -73,6 +74,7 @@ public class PostController {
     }
 
     @GetMapping("/create")
+    @PreAuthorize("isAuthenticated()")
     public String showCreateForm(Model model) {
         User currentUser = userService.getCurrentUser();
         if (currentUser == null) {
@@ -80,18 +82,25 @@ public class PostController {
         }
 
         model.addAttribute("postRequest",
-                new PostRequest(null, null, "", "", false, Set.of()));
+                new PostRequest(null, null, "", "",
+                        false, Set.of()));
         model.addAttribute("currentUser", currentUser);
-        return "/create";
+        model.addAttribute("postId", null);
+        if(currentUser.getIsAdmin()){
+            model.addAttribute("allUsers", userService.getAllUsers());
+        }
+        return "create";
     }
 
     @PostMapping("/create")
-    public String handleCreateForm(@ModelAttribute("createPostRequest") @Valid PostRequest request) {
+    @PreAuthorize("isAuthenticated()")
+    public String handleCreateForm(@ModelAttribute("postRequest") @Valid PostRequest request) {
         User currentUser = userService.getCurrentUser();
-        if (currentUser == null) return "redirect:/login";
+        if (currentUser == null)
+            return "redirect:/login";
 
-        postService.createPost(request);
-        return "redirect:/view";
+        PostResponse created = postService.createPost(request);
+        return "redirect:/" + created.id();
     }
 
     @GetMapping("/{id}")
@@ -101,38 +110,52 @@ public class PostController {
         model.addAttribute("post", post);
         model.addAttribute("comments", comments);
         model.addAttribute("newComment", new Comment());
-        return "/view";
+        return "view";
     }
 
     @GetMapping("/edit/{id}")
+    @PreAuthorize("@authz.isPostOwnerOrAdmin(#id)")
     public String showEditForm(@PathVariable Long id, Model model) {
         PostResponse post = postService.getPostById(id);
         User currentUser = userService.getCurrentUser();
 
-        if (!currentUser.isAdmin() && !post.authorName().equals(currentUser.getName())) {
-            throw new AccessDeniedException("Access Denied");
-        }
+        if (currentUser == null)
+            return "redirect:/login";
 
-        model.addAttribute("post", post);
         model.addAttribute("currentUser", currentUser);
-        return "/create";
+        model.addAttribute("postRequest", new PostRequest(
+                post.id(),
+                post.authorId(),
+                post.title(),
+                post.content(),
+                post.isPublished(),
+                post.tags()
+        ));
+        model.addAttribute("postId", id);
+        if(currentUser.getIsAdmin()){
+            model.addAttribute("allUsers", userService.getAllUsers());
+        }
+        return "create";
     }
 
     @PostMapping("/edit/{id}")
-    public String handleEditForm(@PathVariable Long id, @ModelAttribute @Valid PostRequest request) {
-        PostResponse updated = postService.updatePost(id, request);
-        //model.addAttribute("post", updated);
+    @PreAuthorize("@authz.isPostOwnerOrAdmin(#id)")
+    public String handleEditForm(@PathVariable Long id, @ModelAttribute("postRequest") @Valid PostRequest postRequest) {
+        PostResponse updated = postService.updatePost(id, postRequest);
         return "redirect:/" + updated.id();
     }
 
     @PostMapping("/delete/{id}")
+    @PreAuthorize("@authz.isPostOwnerOrAdmin(#id)")
     public String deletePost(@PathVariable Long id) {
         postService.deletePost(id);
         return "redirect:/";
     }
 
     private Instant safeParse(String value) {
-        if (value == null || value.isBlank()) return null;
+        if (value == null || value.isBlank())
+            return null;
+
         try {
             return Instant.parse(value);
         } catch (DateTimeParseException e) {
