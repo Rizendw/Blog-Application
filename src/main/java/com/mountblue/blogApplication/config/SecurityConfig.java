@@ -4,8 +4,12 @@ import com.mountblue.blogApplication.security.CustomUserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -27,11 +31,17 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/","{id}", "/view/**",
                                 "/signup", "/login",
-                                "/comments/add/**"
+                                "/comments/add/**",
+                                "/api/posts/**",
+                                "/api/auth/", "/api/auth/login", "/api/auth/logout",
+                                "/api/auth/signup","/api/auth/me"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**", "/api/tags/**"
                         ).permitAll()
                         .requestMatchers("/create/**", "/edit/**",
                                 "/delete/**", "/comments/edit/**",
-                                "/comments/delete/**"
+                                "/comments/delete/**",
+                                "/api/**"
                         ).authenticated()
                         .anyRequest().authenticated()
                 )
@@ -64,6 +74,11 @@ public class SecurityConfig {
         authenticationProvider.setUserDetailsService(customUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder);
         return authenticationProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(DaoAuthenticationProvider authenticationProvider) {
+        return new ProviderManager(authenticationProvider);
     }
 
 }

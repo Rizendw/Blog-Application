@@ -12,5 +12,8 @@ public interface CommentService {
     Comment updateComment(Long id, CommentRequest updated);
     Comment getById(Long id);
     Long deleteComment(Long id);
+    Comment createCommentApi(Long postId, CommentRequest request);
+    Comment updateCommentApi(Long postId, Long commentId, CommentRequest request);
+    void deleteCommentApi(Long postId, Long commentId);
 
 }

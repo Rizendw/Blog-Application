@@ -2,7 +2,6 @@ package com.mountblue.blogApplication.service.impl;
 
 import com.mountblue.blogApplication.dto.PostRequest;
 import com.mountblue.blogApplication.dto.PostResponse;
-import com.mountblue.blogApplication.dto.TagRequest;
 import com.mountblue.blogApplication.entity.Post;
 import com.mountblue.blogApplication.entity.Tag;
 import com.mountblue.blogApplication.entity.User;
@@ -10,8 +9,8 @@ import com.mountblue.blogApplication.repository.PostRepository;
 import com.mountblue.blogApplication.repository.TagRepository;
 import com.mountblue.blogApplication.service.PostService;
 import com.mountblue.blogApplication.service.TagService;
-import com.mountblue.blogApplication.specification.PostSpecification;
 import com.mountblue.blogApplication.service.UserService;
+import com.mountblue.blogApplication.specification.PostSpecification;
 import org.springframework.security.access.AccessDeniedException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PostServiceImpl  implements PostService {
 
-    private  final PostRepository postRepository;
-    private  final TagRepository tagRepository;
-    private  final TagService tagService;
+    private final PostRepository postRepository;
+    private final TagRepository tagRepository;
+    private final TagService tagService;
     private final UserService userService;
 
     @Override
@@ -150,31 +149,31 @@ public class PostServiceImpl  implements PostService {
 
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(1, size), Sort.by(direction, sortProperty));
 
-        Page<Post> posts = postRepository.findAll(specification,pageable);
+        Page<Post> posts = postRepository.findAll(specification, pageable);
 
 
         return posts.map(this::toDto);
     }
 
-        private PostResponse toDto(Post saved) {
+    private PostResponse toDto(Post saved) {
 
         Set<String> tagNames = saved.getTags().stream()
                 .map(Tag::getName)
                 .collect(Collectors.toSet());
 
-            return new PostResponse(
-                    saved.getId(),
-                    saved.getTitle(),
-                    saved.getContent(),
-                    saved.getExcerpt(),
-                    saved.getAUser().getId(),
-                    saved.getAuthor(),
-                    saved.getIsPublished(),
-                    tagNames,
-                    saved.getCreatedAt(),
-                    saved.getUpdatedAt()
-            );
-        }
+        return new PostResponse(
+                saved.getId(),
+                saved.getTitle(),
+                saved.getContent(),
+                saved.getExcerpt(),
+                saved.getAUser().getId(),
+                saved.getAuthor(),
+                saved.getIsPublished(),
+                tagNames,
+                saved.getCreatedAt(),
+                saved.getUpdatedAt()
+        );
+    }
 
     private Set<Tag> normalizeAndFindTags(Set<String> rawTags) {
         if (rawTags == null || rawTags.isEmpty()) return new LinkedHashSet<>();
@@ -221,4 +220,11 @@ public class PostServiceImpl  implements PostService {
         }
         return len;
     }
+
+    @Override
+    public Post getPostEntity(Long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Post not found"));
+    }
+
 }

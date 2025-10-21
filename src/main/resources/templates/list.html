@@ -182,11 +182,11 @@
 
 <div class="pagination">
     <a th:if="${hasPrev}"
-       th:href="@{/(page=${currentPage - 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">
+       th:href="@{/(page=${currentPage - 1},q=${search},tagId=${selectedTagIds},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">
         &lt; Previous
     </a>
     <a th:if="${hasNext}"
-       th:href="@{/(page=${currentPage + 1},q=${q},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">
+       th:href="@{/(page=${currentPage + 1},q=${search},tagId=${selectedTagIds},author=${authorFilter},isPublished=${isPublished},sortField=${sortField},sortDir=${sortDir})}">
         Next &gt;
     </a>
 </div>

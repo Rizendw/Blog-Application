@@ -9,10 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional
@@ -62,7 +59,45 @@ public class TagServiceImpl implements TagService {
                 .toList();
     }
 
+    @Override
+    public TagRequest getTagByIdApi(Long id) {
+        return getTagById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
+
+    }
+
     private TagRequest map(Tag tag) {
         return new TagRequest(tag.getId(), tag.getName());
+    }
+
+    public Tag getTagEntityById(Long id) {
+        return tagRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Tag not found"));
+    }
+
+
+    @Override
+    @Transactional
+    public TagRequest createTagApi(TagRequest request) {
+        if (request.name() == null || request.name().isBlank()) {
+            throw new IllegalArgumentException("Tag name cannot be blank");
+        }
+
+        String normalized = request.name().trim().toLowerCase();
+        Tag tag = tagRepository.findByNameLower(normalized)
+                .orElseGet(() -> tagRepository.save(Tag.builder()
+                        .name(request.name().trim())
+                        .nameLower(normalized)
+                        .build()));
+
+        return new TagRequest(tag.getId(), tag.getName());
+    }
+
+    @Override
+    @Transactional
+    public void deleteTagApi(Long id) {
+        Tag tag = tagRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Tag not found"));
+        tagRepository.delete(tag);
     }
 }

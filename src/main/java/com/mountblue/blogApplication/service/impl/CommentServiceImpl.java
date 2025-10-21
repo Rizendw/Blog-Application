@@ -6,7 +6,9 @@ import com.mountblue.blogApplication.entity.Post;
 import com.mountblue.blogApplication.entity.User;
 import com.mountblue.blogApplication.repository.CommentRepository;
 import com.mountblue.blogApplication.repository.PostRepository;
+import com.mountblue.blogApplication.repository.UserRepository;
 import com.mountblue.blogApplication.service.CommentService;
+import com.mountblue.blogApplication.service.PostService;
 import com.mountblue.blogApplication.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +27,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final PostService postService;
     private final UserService userService;
 
     @Override
@@ -102,5 +105,63 @@ public class CommentServiceImpl implements CommentService {
         return postId;
     }
 
+    @Override
+    @Transactional
+    public Comment createCommentApi(Long postId, CommentRequest request) {
+        var post = postService.getPostEntity(postId); // you can make a helper in PostServiceImpl if not exist
+        var currentUser = userService.getCurrentUser();
+
+        Comment comment = new Comment();
+        comment.setName(currentUser != null ? currentUser.getName() : request.name());
+        comment.setEmail(currentUser != null ? currentUser.getEmail() : request.email());
+        comment.setComment(request.comment());
+        comment.setPost(post);
+
+        return commentRepository.save(comment);
+    }
+
+    @Override
+    @Transactional
+    public Comment updateCommentApi(Long postId, Long commentId, CommentRequest request) {
+        var post = postService.getPostEntity(postId);
+        var currentUser = userService.getCurrentUser();
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        // ensure comment belongs to this post
+        if (!comment.getPost().getId().equals(postId))
+            throw new AccessDeniedException("Comment does not belong to this post");
+
+        boolean isOwner = currentUser != null &&
+                comment.getEmail().equals(currentUser.getEmail());
+
+        if (!isOwner && (currentUser == null || !currentUser.getIsAdmin()))
+            throw new AccessDeniedException("Not allowed to edit this comment");
+
+        comment.setComment(request.comment());
+        return commentRepository.save(comment);
+    }
+
+    @Override
+    @Transactional
+    public void deleteCommentApi(Long postId, Long commentId) {
+        var post = postService.getPostEntity(postId);
+        var currentUser = userService.getCurrentUser();
+
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new RuntimeException("Comment not found"));
+
+        if (!comment.getPost().getId().equals(postId))
+            throw new AccessDeniedException("Comment does not belong to this post");
+
+        boolean isOwner = currentUser != null &&
+                comment.getEmail().equals(currentUser.getEmail());
+
+        if (!isOwner && (currentUser == null || !currentUser.getIsAdmin()))
+            throw new AccessDeniedException("Not allowed to delete this comment");
+
+        commentRepository.delete(comment);
+    }
 
 }

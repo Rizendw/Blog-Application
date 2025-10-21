@@ -2,6 +2,7 @@ package com.mountblue.blogApplication.service;
 
 import com.mountblue.blogApplication.dto.PostRequest;
 import com.mountblue.blogApplication.dto.PostResponse;
+import com.mountblue.blogApplication.entity.Post;
 import org.springframework.data.domain.Page;
 
 import java.time.Instant;
@@ -14,4 +15,5 @@ public interface PostService {
     PostResponse updatePost(Long id, PostRequest request);
     void deletePost(Long id);
     Page<PostResponse> searchPosts(String search, List<Long> tagId, String author, Boolean isPublished, Instant from, Instant to, int page, int size, String sortField, String sortDir);
+    Post getPostEntity(Long Id);
 }
