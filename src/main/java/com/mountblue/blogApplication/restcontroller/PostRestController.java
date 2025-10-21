@@ -36,11 +36,12 @@ public class PostRestController {
             @RequestParam(required = false) String sortField,
             @RequestParam(required = false) String sortDir
     ) {
-        Instant from = Instant.parse(dateFrom);
-        Instant to = Instant.parse(dateTo);
+        Instant from = parse(dateFrom);
+        Instant to = parse(dateTo);
 
         Page<PostResponse> pageResult = postService.searchPosts(
                 search, tagId, author, published, from, to, page, size, sortField, sortDir);
+
         return  ResponseEntity.ok(new ApiResponse<>
                 (true, "Post fetched successfully", pageResult));
     }
