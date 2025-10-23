@@ -41,6 +41,7 @@ public class GlobalExceptionHandler {
         return handle(req, HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong.", model);
     }
 
+
     // ---------------- internal helper ----------------
 
     private Object handle(HttpServletRequest req, HttpStatus status, String message, Model model) {
