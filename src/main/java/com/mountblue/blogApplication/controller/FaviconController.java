@@ -9,6 +9,6 @@ import java.io.IOException;
 public class FaviconController {
     @GetMapping("favicon.ico")
     public void favicon(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/path-to-your-favicon.ico");
+        //response.sendRedirect("/path-to-your-favicon.ico");
     }
 }
