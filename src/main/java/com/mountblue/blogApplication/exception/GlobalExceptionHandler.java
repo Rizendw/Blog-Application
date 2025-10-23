@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     // ⚫ fallback
     @ExceptionHandler(Exception.class)
     public Object handleGeneral(Exception ex, HttpServletRequest req, Model model) {
-        return handle(req, HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong.", model);
+        return handle(req, HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), model);
     }
 
 
