@@ -150,9 +150,19 @@ public class PostServiceImpl  implements PostService {
         Pageable pageable = PageRequest.of(Math.max(page, 0), Math.max(1, size), Sort.by(direction, sortProperty));
 
         Page<Post> posts = postRepository.findAll(specification, pageable);
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
 
 
-        return posts.map(this::toDto);
+        List<Post> postsWithTags = postIds.isEmpty()
+                ? List.of()
+                : postRepository.findAllByIdWithTags(postIds);
+
+            // Map postsWithTags to DTOs
+        List<PostResponse> responses = postsWithTags.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(responses, pageable, posts.getTotalElements());
     }
 
     private PostResponse toDto(Post saved) {
